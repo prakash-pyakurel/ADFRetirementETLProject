@@ -62,12 +62,12 @@ The dataset simulates a retirement contribution file with fields such as:
 *(Preview in `/powerbi/` folder)*
 
 ---
-
+(screenshots/Screenshot%202025-05-11%20214844.png)
 ## 🖼️ Azure Screenshots
 
 | Pipeline Success | Join Transform | Add Month Logic | Sink Mapping |
 |------------------|----------------|------------------|---------------|
-| ![](screenshots/Screenshot%202025-05-11%20214758.png) | ![](screenshots/Screenshot%202025-05-11%20214844.png) | ![](screenshots/Screenshot%202025-05-11%20214944.png) | ![](screenshots/Screenshot%202025-05-11%20215024.png) |
+| ![](screenshots/Screenshot%202025-05-11%20214844.png) | ![](screenshots/Screenshot%202025-05-11%20214758.png) | ![](screenshots/Screenshot%202025-05-11%20214944.png) | ![](screenshots/Screenshot%202025-05-11%20215024.png) |
 
 ---
 
