@@ -17,3 +17,77 @@ This project demonstrates a complete end-to-end ETL pipeline using **Azure Data 
 
 ## 📁 Project Structure
 
+---
+
+## 🔄 ETL Process Flow
+
+1. **Raw Data Ingestion**
+   - CSV uploaded to **Azure Blob Storage**
+
+2. **Data Factory Processing**
+   - Pipeline stages data into Azure SQL staging table
+   - Data flow cleans, transforms, and enriches it
+     - Filters nulls
+     - Extracts `MonthName` from date
+     - Joins with plan reference (if any)
+
+3. **SQL Sink**
+   - Loads clean data to final table (`RetirementContributions`)
+
+4. **Power BI**
+   - Connects to Azure SQL DB
+   - Builds visuals like monthly trends, employee-level insights
+
+---
+
+## 🧪 Sample Data
+
+The dataset simulates a retirement contribution file with fields such as:
+
+- `EmployeeID`
+- `EmployeeName`
+- `ContributionDate`
+- `ContributionAmount`
+- `PlanType`
+- `MonthName` (generated in ADF)
+
+---
+
+## 📊 Power BI Dashboard
+
+- Total Contributions per Month
+- Plan Type Distribution
+- Employee-Level Breakdown
+
+*(Preview in `/powerbi/` folder)*
+
+---
+
+## 🖼️ Azure Screenshots
+
+| Pipeline Success | Join Transform | Add Month Logic | Sink Mapping |
+|------------------|----------------|------------------|---------------|
+| ![](screenshots/Screenshot%202025-05-11%20214758.png) | ![](screenshots/Screenshot%202025-05-11%20214844.png) | ![](screenshots/Screenshot%202025-05-11%20214944.png) | ![](screenshots/Screenshot%202025-05-11%20215024.png) |
+
+---
+
+## 📂 SQL Table Schema
+
+See: [`sql/create_retirement_table.sql`](sql/create_retirement_table.sql)
+
+---
+
+## 🔐 Notes
+
+- No sensitive or proprietary data is shared.
+- Dataset was self-generated for learning and demonstration purposes.
+
+---
+
+## 📬 Contact
+
+Made by **[prakash-pyakurel](https://github.com/prakash-pyakurel)**  
+📧 Email: prakashpyakurel@outlook.com  
+📎 LinkedIn: [linkedin.com/in/prakash-pyakurel](https://www.linkedin.com/in/prakash-pyakurel)
+
+...
