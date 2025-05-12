@@ -1,0 +1,387 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adfproject1factory"
+        },
+        "AzureBlobStorage_rawdata_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureBlobStorage_rawdata'"
+        },
+        "AzureSQL_RetirementDB_password": {
+            "type": "secureString",
+            "metadata": "Secure string for 'password' of 'AzureSQL_RetirementDB'"
+        },
+        "AzureSQL_RetirementDB_properties_typeProperties_server": {
+            "type": "string",
+            "defaultValue": "adf-sql-server-prakash.database.windows.net"
+        },
+        "AzureSQL_RetirementDB_properties_typeProperties_database": {
+            "type": "string",
+            "defaultValue": "RetirementDB"
+        },
+        "AzureSQL_RetirementDB_properties_typeProperties_userName": {
+            "type": "string",
+            "defaultValue": "sqladmin"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_sql_staging_contributions')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureSQL_RetirementDB",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [
+                    {
+                        "name": "EmployerName",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "EmployeeID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "ContributionAmount",
+                        "type": "decimal",
+                        "precision": 10,
+                        "scale": 2
+                    },
+                    {
+                        "name": "ContributionDate",
+                        "type": "date"
+                    },
+                    {
+                        "name": "PlanID",
+                        "type": "nvarchar"
+                    }
+                ],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "Staging_Contributions"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureSQL_RetirementDB')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_plan_metadata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureBlobStorage_rawdata",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": "plan_metadata.csv",
+                        "container": "raw-data"
+                    },
+                    "columnDelimiter": ",",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "PlanID",
+                        "type": "String"
+                    },
+                    {
+                        "name": "PlanName",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Provider",
+                        "type": "String"
+                    },
+                    {
+                        "name": "PlanStatus",
+                        "type": "String"
+                    },
+                    {
+                        "name": "PlanStartDate",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_rawdata')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/ds_sql_clean_contributions')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureSQL_RetirementDB",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureSqlTable",
+                "schema": [
+                    {
+                        "name": "EmployerName",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "EmployeeID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "ContributionAmount",
+                        "type": "decimal",
+                        "precision": 10,
+                        "scale": 2
+                    },
+                    {
+                        "name": "ContributionDate",
+                        "type": "date"
+                    },
+                    {
+                        "name": "PlanID",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "PlanName",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "Provider",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "PlanStatus",
+                        "type": "nvarchar"
+                    },
+                    {
+                        "name": "PlanStartDate",
+                        "type": "date"
+                    },
+                    {
+                        "name": "Month",
+                        "type": "varchar"
+                    }
+                ],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "Clean_Contributions"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureSQL_RetirementDB')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TransformContributions_Clean')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "TransformContributions_Clean",
+                        "type": "ExecuteDataFlow",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "dataflow": {
+                                "referenceName": "TransformContributions_Clean",
+                                "type": "DataFlowReference",
+                                "parameters": {},
+                                "datasetParameters": {
+                                    "SourceContributions": {},
+                                    "SourcePlanMeta": {},
+                                    "SinkCleanContributions": {}
+                                }
+                            },
+                            "staging": {},
+                            "compute": {
+                                "coreCount": 8,
+                                "computeType": "General"
+                            },
+                            "traceLevel": "Fine"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2025-05-11T22:01:25Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/dataflows/TransformContributions_Clean')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureBlobStorage_rawdata')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('AzureBlobStorage_rawdata_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureSQL_RetirementDB')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "server": "[parameters('AzureSQL_RetirementDB_properties_typeProperties_server')]",
+                    "database": "[parameters('AzureSQL_RetirementDB_properties_typeProperties_database')]",
+                    "encrypt": "mandatory",
+                    "trustServerCertificate": false,
+                    "authenticationType": "SQL",
+                    "userName": "[parameters('AzureSQL_RetirementDB_properties_typeProperties_userName')]",
+                    "password": {
+                        "type": "SecureString",
+                        "value": "[parameters('AzureSQL_RetirementDB_password')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/TransformContributions_Clean')]",
+            "type": "Microsoft.DataFactory/factories/dataflows",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "MappingDataFlow",
+                "typeProperties": {
+                    "sources": [
+                        {
+                            "dataset": {
+                                "referenceName": "ds_sql_staging_contributions",
+                                "type": "DatasetReference"
+                            },
+                            "name": "SourceContributions"
+                        },
+                        {
+                            "dataset": {
+                                "referenceName": "ds_plan_metadata",
+                                "type": "DatasetReference"
+                            },
+                            "name": "SourcePlanMeta"
+                        }
+                    ],
+                    "sinks": [
+                        {
+                            "dataset": {
+                                "referenceName": "ds_sql_clean_contributions",
+                                "type": "DatasetReference"
+                            },
+                            "name": "SinkCleanContributions"
+                        }
+                    ],
+                    "transformations": [
+                        {
+                            "name": "JoinedData"
+                        },
+                        {
+                            "name": "AddMonth"
+                        }
+                    ],
+                    "scriptLines": [
+                        "source(output(",
+                        "          EmployerName as string,",
+                        "          EmployeeID as integer,",
+                        "          ContributionAmount as decimal(10,2),",
+                        "          ContributionDate as date,",
+                        "          PlanID as string",
+                        "     ),",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     isolationLevel: 'READ_UNCOMMITTED',",
+                        "     format: 'table') ~> SourceContributions",
+                        "source(output(",
+                        "          PlanID as string,",
+                        "          PlanName as string,",
+                        "          Provider as string,",
+                        "          PlanStatus as string,",
+                        "          PlanStartDate as string",
+                        "     ),",
+                        "     allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     ignoreNoFilesFound: false) ~> SourcePlanMeta",
+                        "SourceContributions, SourcePlanMeta join(SourceContributions@PlanID == SourcePlanMeta@PlanID,",
+                        "     joinType:'inner',",
+                        "     matchType:'exact',",
+                        "     ignoreSpaces: false,",
+                        "     broadcast: 'auto')~> JoinedData",
+                        "JoinedData derive(Month = iif(isNull(ContributionDate), 'Unknown', substring(toString(ContributionDate), 0, 7))) ~> AddMonth",
+                        "AddMonth sink(allowSchemaDrift: true,",
+                        "     validateSchema: false,",
+                        "     input(",
+                        "          EmployerName as string,",
+                        "          EmployeeID as integer,",
+                        "          ContributionAmount as decimal(10,2),",
+                        "          ContributionDate as date,",
+                        "          PlanID as string,",
+                        "          PlanName as string,",
+                        "          Provider as string,",
+                        "          PlanStatus as string,",
+                        "          PlanStartDate as date,",
+                        "          Month as string",
+                        "     ),",
+                        "     deletable:false,",
+                        "     insertable:true,",
+                        "     updateable:false,",
+                        "     upsertable:false,",
+                        "     format: 'table',",
+                        "     skipDuplicateMapInputs: true,",
+                        "     skipDuplicateMapOutputs: true,",
+                        "     errorHandlingOption: 'stopOnFirstError',",
+                        "     mapColumn(",
+                        "          EmployerName,",
+                        "          EmployeeID,",
+                        "          ContributionAmount,",
+                        "          ContributionDate,",
+                        "          PlanName,",
+                        "          Provider,",
+                        "          PlanStatus,",
+                        "          Month",
+                        "     )) ~> SinkCleanContributions"
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/ds_sql_staging_contributions')]",
+                "[concat(variables('factoryId'), '/datasets/ds_plan_metadata')]",
+                "[concat(variables('factoryId'), '/datasets/ds_sql_clean_contributions')]"
+            ]
+        }
+    ]
+}
