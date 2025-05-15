@@ -59,7 +59,7 @@ The dataset simulates a retirement contribution file with fields such as:
 - Plan Type Distribution
 - Employee-Level Breakdown
 
-![Dashboard](power bi/Screenshot 2025-05-11 222725.png)
+![Dashboard](powerbi/Screenshot 2025-05-11 222725.png)
 
 ---
 (screenshots/Screenshot%202025-05-11%20214844.png)
